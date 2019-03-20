@@ -2,7 +2,10 @@ package sqllite
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/novikov1981/experiments"
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/novikov1981/dna-beaver"
+	"log"
+	"os"
 )
 
 type Repository struct {
@@ -28,7 +31,12 @@ func NewRepository(dbPath string) (*Repository, error) {
 }
 
 func checkFileExists(filePath string) bool {
-	// TODO check if the file exists in filesystem
+	if _, err := os.Stat("./synthesis.db"); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+		log.Fatalf("error: file stat problems: %s", err.Error())
+	}
 	return true
 }
 
@@ -79,6 +87,6 @@ func (r *Repository) InsertSynthesis(name string, scale int64, oo []string) erro
 	return nil
 }
 
-func (r *Repository) FindSynthesis(pattern string) ([]experiments.Synthesis, error) {
+func (r *Repository) FindSynthesis(pattern string) ([]dna_beaver.Synthesis, error) {
 	return nil, nil
 }

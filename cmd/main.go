@@ -4,34 +4,41 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/novikov1981/experiments"
-	"github.com/novikov1981/experiments/repository/sqllite"
-	"github.com/novikov1981/experiments/validation"
+	dna_beaver "github.com/novikov1981/dna-beaver"
+	"github.com/novikov1981/dna-beaver/repository/sqllite"
+	validation "github.com/novikov1981/dna-beaver/validations"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
 	"log"
 	"os"
 )
 
-const (
-	sqlLiteFile  = "./synthesis.db"
-	validateMode = "validate"
-	saveMode     = "save"
-	searchMode   = "search"
-)
-
 func main() {
 	var synthesisName = flag.String("name", "generic", "the name of the sysnthesis under interest")
 	var synthesisScale = flag.Int64("scale", 1, "the scale of the sysnthesis under interest")
 	var filePath = flag.String("path", "", "the file path with the oligs to be parsed and saved")
-	var mode = flag.String("mode", validateMode, "the mode to run the application: validate, save, search")
-	var oligPattern = flag.String("oligPattern", "", "the pattern of the olig's name to search for in the database")
+	var mode = flag.String("mode", dna_beaver.ValidateMode, "the mode to run the application: validate, save, search")
+	var searchPattern = flag.String("searchPattern", "", "the pattern of the olig's name to search for in the database")
 
 	flag.Parse()
 
-	fmt.Printf("synthesis '%s', scale %d from file '%s' running in mode '%s', search pattern '%s' (if search mode)\n", *synthesisName, *synthesisScale, *filePath, *mode, *oligPattern)
+	// print initial parameters
+	log.Printf("start DNA BEAVER APPLICATION")
+	defer log.Printf("finish DNA BEAVER APPLICATION")
+	log.Printf("synthesis '%s', scale %d, synthesis file '%s' running in mode '%s'", *synthesisName, *synthesisScale, *filePath, *mode)
+	if *mode == dna_beaver.SearchMode {
+		log.Printf("search pattern '%s'", *searchPattern)
+	}
 
-	repo, err := sqllite.NewRepository(sqlLiteFile)
+	// flags validation
+	if *synthesisScale <= 0 {
+		log.Fatalf("error: wrong scale provided %d, should be above zero", *synthesisScale)
+	}
+	if *filePath == "" {
+		log.Fatalf("error: empty file path with synthesis provided %s", *filePath)
+	}
+
+	repo, err := sqllite.NewRepository(dna_beaver.SqlLiteFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,39 +48,31 @@ func main() {
 		log.Fatal(err)
 	}
 
-	switch *mode {
-	case "validate":
-		oligs, err := readOligsFromFile(*filePath)
+	var oligs []string
+	if *mode == dna_beaver.ValidateMode || *mode == dna_beaver.SaveMode {
+		oligs, err = readOligsFromFile(*filePath)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("error: oligs file reading problem: %s", err.Error())
 		}
-		fmt.Println("Validate initial set of oligs:")
+		log.Println("validate initial set of oligs:")
 		printOligs(oligs)
 		if err = validator.Validate(oligs); err != nil {
-			log.Printf("Validation finished with error: %s\n", err.Error())
+			log.Printf("validation finished with error: %s", err.Error())
 		}
-	case "save":
-		oligs, err := readOligsFromFile(*filePath)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("Validate initial set of oligs before save:")
-		printOligs(oligs)
-		if err = validator.Validate(oligs); err != nil {
-			log.Printf("Validation finished with error: %s. ATTENTION, cannot save the oligs!\n", err.Error())
-			return
-		}
+	}
+	if *mode == dna_beaver.SaveMode {
 		err = repo.InsertSynthesis(*synthesisName, *synthesisScale, oligs)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("Synthesis %s saved with success.", *synthesisName)
-	case "search":
-		foundSynthesis, err := repo.FindSynthesis(*oligPattern)
+		log.Printf("synthesis %s saved with success.", *synthesisName)
+	}
+	if *mode == dna_beaver.SearchMode {
+		foundSynthesis, err := repo.FindSynthesis(*searchPattern)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("Found %d synthesis containing requested olig pattern %s.\n", len(foundSynthesis), *oligPattern)
+		log.Printf("found %d synthesis containing requested olig pattern %s.\n", len(foundSynthesis), *searchPattern)
 		printSynthesis(foundSynthesis)
 	}
 }
@@ -100,7 +99,7 @@ func printOligs(oo []string) {
 	}
 }
 
-func printSynthesis(ss []experiments.Synthesis) {
+func printSynthesis(ss []dna_beaver.Synthesis) {
 	for _, s := range ss {
 		fmt.Printf("Synthes %+v\n", s)
 	}
