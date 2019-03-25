@@ -13,35 +13,36 @@ func NewValidator() (*Validator, error) {
 	return &Validator{}, nil
 }
 
-func (r *Validator) Validate(oo []string) error { // Для ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ указыается № строки, игнор ошибки не возможен
+func (r *Validator) Validate(oo []string) (error, int) { // Для ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ указыается № строки, игнор ошибки не возможен
+	var i int
 	for i, o := range oo { // Для оибки НЕДОПУСТИМЫЙ СИМВОЛ указывается № строки, №символа и возможен игнор
 		if err := r.ValidateOne(o); err != nil {
-			return errors.Wrap(err, "olig "+string(i))
+			return errors.Wrap(err, "olig "+string(i)), i
 		}
 	}
-	return nil
+	return nil, i
 }
 
 func (r *Validator) ValidateOne(o string) error {
 	// make all validations for olig
-	var oContent = ""
-	parts := strings.Split(o, ",")
+	numSimbol := make([]int, 3)
+	dna := strings.Split(o, ",")[1]
+	dnaU := strings.ToUpper(dna)
 	//fmt.Println("длинна parts", len(parts))
 
-	if len(parts) == 3 {
-
-		for _, oContent = range strings.Split(o, ",") {
-			if oContent == "" {
-				//В этом месте должен быть возврат ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ
-			} else {
-				oContent = strings.Split(o, ",")[1]
-			}
-		}
-
-	} else { //	В этом месте должен быть возврат ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ
-	}
+	//if len(parts) == 3 {
+	//
+	//	for _, oContent = range strings.Split(o, ",") {
+	//		if oContent == "" {
+	//			В этом месте должен быть возврат ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ
+	//} else {
+	//	oContent = strings.Split(o, ",")[1]
+	//}
+	//}
+	//
+	//} else { //	В этом месте должен быть возврат ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ
+	//}
 	//Полверка на недопустимые символы, эти недопустимые символы могут быть проигнорированы по желанию пользователя
-	dnaU := strings.ToUpper(o)
 	num := 1
 	voc := []string{"A", "C", "G", "T", "R", "Y", "K", "M", "S", "W", "B", "D", "H", "V", "N"} // voc - слайс содержащий допустимые симолы он может быть константой и он используется в нескольких функциях
 	for _, r := range dnaU {
@@ -52,18 +53,20 @@ func (r *Validator) ValidateOne(o string) error {
 			count += c
 		}
 		if count == 0 {
+			numSimbol = append(numSimbol, num)
+			return fmt.Errorf("incorrect content for olig %s", o)
 			// В этом месте должна быть ошибка НЕДОПУСТИМЫЙ СИМВОЛ с указанием недопустимого символа, его номера в последовательности
 		}
 		num += 1
 	}
 
 	//
-	return fmt.Errorf("incorrect content for olig %s", o)
+	//return fmt.Errorf("incorrect content for olig %s", o)
 }
 
 func (r *Validator) Measure(oo []string, ignoreMode bool) (dA, dC, dG, dT float32, err error) {
 	if !ignoreMode {
-		if err := r.Validate(oo); err != nil {
+		if err, _ := r.Validate(oo); err != nil {
 
 			var dA, dC, dG, dT float32 = 0, 0, 0, 0
 			voc := []string{"A", "C", "G", "T", "R", "Y", "K", "M", "S", "W", "B", "D", "H", "V", "N"}
