@@ -57,8 +57,8 @@ func main() {
 		log.Println("validate initial set of oligs:")
 		printOligs(oligs)
 		validator.Validate(oligs)
-		}
 	}
+
 	if *mode == dna_beaver.SaveMode {
 		err = repo.InsertSynthesis(*synthesisName, *synthesisScale, oligs)
 		if err != nil {

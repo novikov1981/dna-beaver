@@ -12,14 +12,12 @@ func NewValidator() (*Validator, error) {
 	return &Validator{}, nil
 }
 
-func (r *Validator) Validate(oo []string) { // Для ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ указыается № строки, игнор ошибки не возможен
-	for i, o := range oo { // Для оибки НЕДОПУСТИМЫЙ СИМВОЛ указывается № строки, №символа и возможен игнор
+func (r *Validator) Validate(oo []string) {
+	for i, o := range oo {
 		if wronSimbol := r.ValidateOne(o); len(wronSimbol) != 0 {
 			for _, s := range wronSimbol {
-				log.Printf("sequence №%d contains invalid character №%s", i, s)
+				log.Printf("olig %d '%s' contains invalid character '%s' ", i+1, oo[i], s)
 			}
-		} else {
-			return
 		}
 	}
 }
@@ -29,21 +27,6 @@ func (r *Validator) ValidateOne(o string) (n []string) {
 	wronSimbol := make([]string, 0)
 	dna := strings.Split(o, ",")[1]
 	dnaU := strings.ToUpper(dna)
-	//fmt.Println("длинна parts", len(parts))
-
-	//if len(parts) == 3 {
-	//
-	//	for _, oContent = range strings.Split(o, ",") {
-	//		if oContent == "" {
-	//			В этом месте должен быть возврат ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ
-	//} else {
-	//	oContent = strings.Split(o, ",")[1]
-	//}
-	//}
-	//
-	//} else { //	В этом месте должен быть возврат ошибки НЕВЕРНОЕ СОДЕРЖАНИЕ
-	//}
-	//Полверка на недопустимые символы, эти недопустимые символы могут быть проигнорированы по желанию пользователя
 	voc := []string{"A", "C", "G", "T", "R", "Y", "K", "M", "S", "W", "B", "D", "H", "V", "N"} // voc - слайс содержащий допустимые симолы он может быть константой и он используется в нескольких функциях
 	for _, r := range dnaU {
 		count := 0
