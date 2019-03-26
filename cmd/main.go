@@ -56,9 +56,7 @@ func main() {
 		}
 		log.Println("validate initial set of oligs:")
 		printOligs(oligs)
-		var i int
-		if err, i = validator.Validate(oligs); err != nil {
-			log.Printf("validation finished with error: %s", err.Error(), i+1)
+		validator.Validate(oligs)
 		}
 	}
 	if *mode == dna_beaver.SaveMode {
