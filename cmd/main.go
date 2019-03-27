@@ -56,7 +56,13 @@ func main() {
 		}
 		log.Println("validate initial set of oligs:")
 		printOligs(oligs)
-		validator.Validate(oligs)
+		err = validator.Validate(oligs)
+		if err != nil {
+			log.Print(err.Error())
+			return
+		} else {
+			log.Print("validated successfully - synthesis does not contain errors")
+		}
 
 		seqMap := validator.Measure(oligs)
 		log.Printf("seqMap", seqMap)

@@ -7,7 +7,7 @@
 #5501___501Ñ_7/21,cctggaatatctgtcacaatc,x
 #5501___501Ñ_8/19,gaattcagagacaggactc,x
 #5501___501Ñ_9/21,agtgtttttttggttatctag,x
-#5501___501Ñ_10/20,gaattctgatgtgaaacaac,x
+#5501___501Ñ_10/20,ga8098098attctgatgtgaaacaac,x
 #5501___501Ñ_11/17,ctcctggctgagctttg,x
 #5501___501Ñ_12/20,cagaaggtattggatgtggg,x
 #5501___501Ñ_13/18,ttgccaaaagccactatt,x

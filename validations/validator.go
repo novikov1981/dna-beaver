@@ -1,8 +1,11 @@
 package validation
 
 import (
-	"log"
 	"strings"
+)
+
+const (
+	validNotations = "ACGTRYKMSWBDHVN"
 )
 
 type Validator struct {
@@ -12,37 +15,31 @@ func NewValidator() (*Validator, error) {
 	return &Validator{}, nil
 }
 
-func (r *Validator) Validate(oo []string) {
+func (r *Validator) Validate(oo []string) error {
+	verr := NewIncorrectSynthesisError()
 	for i, o := range oo {
-		if wronSimbol := r.ValidateOne(o); len(wronSimbol) != 0 {
-			for _, s := range wronSimbol {
-				log.Printf("olig %d '%s' contains invalid character '%s' ", i+1, oo[i], s)
-			}
+		if err := r.ValidateOne(o, i); err != nil {
+			verr.AddOligError(err)
 		}
 	}
+	if !verr.Empty() {
+		return &verr
+	}
+	return nil
 }
 
-func (r *Validator) ValidateOne(o string) (n []string) {
-	// make all validations for olig
-	wronSimbol := make([]string, 0)
-	dna := strings.Split(o, ",")[1]
-	dnaU := strings.ToUpper(dna)
-	trueLinks := []string{"A", "C", "G", "T", "R", "Y", "K", "M", "S", "W", "B", "D", "H", "V", "N"} // voc - слайс содержащий допустимые симолы он может быть константой и он используется в нескольких функциях
-	for _, r := range dnaU {
-		count := 0
-		s := string(r)
-		for _, o := range trueLinks {
-			c := strings.Count(s, o)
-			count += c
-		}
-		if count == 0 {
-			wronSimbol = append(wronSimbol, string(r))
-			//return fmt.Errorf("incorrect content for olig %s", o)
-			// В этом месте должна быть ошибка НЕДОПУСТИМЫЙ СИМВОЛ с указанием недопустимого символа, его номера в последовательности
+func (r *Validator) ValidateOne(o string, p int) error {
+	verr := NewIncorrectOligSymbolsError(o, p)
+	dna := strings.ToUpper(ExtractDna(o))
+	for p, a := range dna {
+		if strings.Index(validNotations, string(a)) == -1 {
+			verr.AddErrorPosition(p)
 		}
 	}
-
-	return wronSimbol
+	if !verr.Empty() {
+		return &verr
+	}
+	return nil
 }
 
 func (r *Validator) Measure(oo []string) (x map[string]int) {
