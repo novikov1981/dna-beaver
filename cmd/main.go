@@ -57,6 +57,9 @@ func main() {
 		log.Println("validate initial set of oligs:")
 		printOligs(oligs)
 		validator.Validate(oligs)
+
+		seqMap := validator.Measure(oligs)
+		log.Printf("seqMap", seqMap)
 	}
 
 	if *mode == dna_beaver.SaveMode {

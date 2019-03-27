@@ -1,5 +1,5 @@
 #5501___501Ñ_1/19,gtctaacaacaacaacaac,x
-#5501___501Ñ_2/22,atcctactaaatc777ctggtacag,x
+#5501___501Ñ_2/22,atcctactaaatcc tggtacag,
 #5501___501Ñ_3/21,gatctgaaaaggaatatgaag,x
 #5501___501Ñ_4/18,ttaarykmswbdhvncgggag,x
 #5501___501Ñ_5/22,cttatactattagactaacgcc,x
