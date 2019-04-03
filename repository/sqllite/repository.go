@@ -6,6 +6,7 @@ import (
 	"github.com/novikov1981/dna-beaver"
 	"log"
 	"os"
+	"time"
 )
 
 type Repository struct {
@@ -84,6 +85,26 @@ func (r *Repository) InsertSynthesis(name string, scale int64, oo []string) erro
 	//	// INSER to olig
 	//}
 	//
+	tx, err := r.database.Beginx()
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(`INSERT INTO synthesis (name, scale, created_at) VALUES (?, ?, ?)`, name, scale, time.Now())
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	//for _,o := range oo {
+	//	_, err = tx.Exec(`INSERT INTO oligs (name, scale, created_at) VALUES (?, ?, ?)`,name,scale,time.Now())
+	//	if err != nil {
+	//		tx.Rollback()
+	//		return err
+	//	}
+	//}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

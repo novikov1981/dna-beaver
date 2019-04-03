@@ -19,6 +19,7 @@ func main() {
 	var filePath = flag.String("path", "", "the file path with the oligs to be parsed and saved")
 	var mode = flag.String("mode", dna_beaver.ValidateMode, "the mode to run the application: validate, save, search")
 	var searchPattern = flag.String("searchPattern", "", "the pattern of the olig's name to search for in the database")
+	var force = flag.Bool("forceSave", false, "force saving of non-validated synthesis")
 
 	flag.Parse()
 
@@ -59,7 +60,12 @@ func main() {
 		err = validator.Validate(oligs)
 		if err != nil {
 			log.Print(err.Error())
-			return
+			if !*force {
+				log.Print("synthesis will not be saved because of validation errors")
+				return
+			} else {
+				log.Print("force saving non validated synthesis")
+			}
 		} else {
 			log.Print("validated successfully - synthesis does not contain errors")
 		}
