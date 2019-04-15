@@ -108,6 +108,26 @@ func (r *Repository) InsertSynthesis(name string, scale int64, oo []string) erro
 	return nil
 }
 
+func (r *Repository) InsertOligs(uuid string, synthesis_name, oo []string) error {
+
+	tx, err := r.database.Beginx()
+	if err != nil {
+		return err
+	}
+	for _, o := range oo {
+		_, err = tx.Exec(`INSERT INTO oligs (uuid, synthesis_name, content) VALUES (?, ?, ?)`, uuid, synthesis_name, o)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *Repository) FindSynthesis(pattern string) ([]dna_beaver.Synthesis, error) {
 	return nil, nil
 }

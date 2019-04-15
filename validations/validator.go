@@ -11,6 +11,10 @@ const (
 type Validator struct {
 }
 
+type Statistic struct {
+	a, c, g, t, r, y, k, m, s, w, b, d, h, v, n, allLinks, allOligs, wrongSymbols int
+}
+
 func NewValidator() (*Validator, error) {
 	return &Validator{}, nil
 }
@@ -41,97 +45,86 @@ func (r *Validator) ValidateOne(o string, p int) error {
 	}
 	return nil
 }
-
-func (r *Validator) Measure(oo []string) (x map[string]int) {
-
-	seqMap := make(map[string]int)
-	trueLinks := []string{"A", "C", "G", "T", "R", "Y", "K", "M", "S", "W", "B", "D", "H", "V", "N"}
+func (r *Statistic) Measure(oo []string) (synthesisStatistic Statistic) {
 	for _, o := range oo {
-		var dna = ""
-		dna = strings.Split(o, ",")[1]
-		dnaU := strings.ToUpper(dna)
-		count := 0
-
-		for _, o := range trueLinks {
-			c := strings.Count(dnaU, string(o))
-			if c > 0 {
-				switch o {
-				case "A":
-					seqMap["A"] += c
-				case "C":
-					seqMap["C"] += c
-				case "G":
-					seqMap["G"] += c
-				case "T":
-					seqMap["T"] += c
-				case "R":
-					seqMap["R"] += c
-					//					dA += cf / 2
-					//					dG += cf / 2
-				case "Y":
-					seqMap["Y"] += c
-					//					dC += cf / 2
-					//					dT += cf / 2
-				case "K":
-					seqMap["K"] += c
-					//					dG += cf / 2
-					//					dT += cf / 2
-				case "M":
-					seqMap["M"] += c
-					//					dA += cf / 2
-					//					dC += cf / 2
-				case "S":
-					seqMap["S"] += c
-					//					dG += cf / 2
-					//					dC += cf / 2
-				case "W":
-					seqMap["W"] += c
-					//					dA += cf / 2
-					//					dT += cf / 2
-				case "B":
-					seqMap["B"] += c
-					//					dC += cf / 3
-					//					dG += cf / 3
-					//					dT += cf / 3
-				case "D":
-					seqMap["D"] += c
-					//					dA += cf / 3
-					//					dG += cf / 3
-					//					dT += cf / 3
-				case "H":
-					seqMap["H"] += c
-					//					dA += cf / 3
-					//					dC += cf / 3
-					//					dG += cf / 3
-				case "V":
-					seqMap["V"] += c
-					//					dA += cf / 3
-					//					dC += cf / 3
-					//					dG += cf / 3
-				case "N":
-					seqMap["N"] += c
-					//					dA += cf / 4
-					//					dC += cf / 4
-					//					dG += cf / 4
-					//					dT += cf / 4
-				}
-			}
-			count += c
-		}
-
-		//}
-		seqMap["wronSimbol"] += len(dna) - count
-		seqMap["allLinks"] += len(dna)
-		seqMap["allOligs"] += 1
+		statisticOne := r.MeasureOne(o)
+		synthesisStatistic += statisticOne
 	}
-
-	return seqMap
+	return synthesisStatistic
 }
 
-///
-///
-///
-//return 0, 0, 0, 0, nil
-//}
-//return dA, dC, dG, dT, nil
-//}
+func (r *Statistic) MeasureOne(o string) (statisticOne Statistic) {
+	dna := strings.ToUpper(ExtractDna(o))
+	count := 0
+	for _, o := range validNotations {
+		c := strings.Count(dna, string(o))
+		if c > 0 {
+			switch string(o) {
+			case "A":
+				statisticOne.a += c
+			case "C":
+				statisticOne.c += c
+			case "G":
+				statisticOne.g += c
+			case "T":
+				statisticOne.t += c
+			case "R":
+				statisticOne.r += c
+				//					dA += cf / 2
+				//					dG += cf / 2
+			case "Y":
+				statisticOne.y += c
+				//					dC += cf / 2
+				//					dT += cf / 2
+			case "K":
+				statisticOne.k += c
+				//					dG += cf / 2
+				//					dT += cf / 2
+			case "M":
+				statisticOne.m += c
+				//					dA += cf / 2
+				//					dC += cf / 2
+			case "S":
+				statisticOne.s += c
+				//					dG += cf / 2
+				//					dC += cf / 2
+			case "W":
+				statisticOne.w += c
+				//					dA += cf / 2
+				//					dT += cf / 2
+			case "B":
+				statisticOne.b += c
+				//					dC += cf / 3
+				//					dG += cf / 3
+				//					dT += cf / 3
+			case "D":
+				statisticOne.d += c
+				//					dA += cf / 3
+				//					dG += cf / 3
+				//					dT += cf / 3
+			case "H":
+				statisticOne.h += c
+				//					dA += cf / 3
+				//					dC += cf / 3
+				//					dG += cf / 3
+			case "V":
+				statisticOne.v += c
+				//					dA += cf / 3
+				//					dC += cf / 3
+				//					dG += cf / 3
+			case "N":
+				statisticOne.n += c
+				//					dA += cf / 4
+				//					dC += cf / 4
+				//					dG += cf / 4
+				//					dT += cf / 4
+			}
+		}
+		count += c
+	}
+
+	statisticOne.wrongSymbols += len(dna) - count
+	statisticOne.allLinks += len(dna)
+
+	return statisticOne
+}
