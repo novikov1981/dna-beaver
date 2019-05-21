@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"github.com/novikov1981/dna-beaver/utils"
 	"strings"
 )
 
@@ -25,7 +26,7 @@ func (e *IncorrectOligSymbolsError) Error() string {
 	sb.WriteString(
 		fmt.Sprintf("Validation error: olig number %d '%s' contains wrong symbols\n", e.oligNumber+1, e.olig))
 	for _, pos := range e.positions {
-		sb.WriteString(fmt.Sprintf("position %d character '%s'\n", pos+1, string(ExtractDna(e.olig)[pos])))
+		sb.WriteString(fmt.Sprintf("position %d character '%s'\n", pos+1, string(utils.ExtractDna(e.olig)[pos])))
 	}
 	return sb.String()
 }

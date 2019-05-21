@@ -6,3 +6,7 @@ const (
 	SaveMode     = "save"
 	SearchMode   = "search"
 )
+
+const (
+	ValidNotations = "ACGTRYKMSWBDHVN"
+)

@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"flag"
-	"fmt"
 	dna_beaver "github.com/novikov1981/dna-beaver"
+	"github.com/novikov1981/dna-beaver/measurements"
 	"github.com/novikov1981/dna-beaver/repository/sqllite"
 	validation "github.com/novikov1981/dna-beaver/validations"
 	"golang.org/x/text/encoding/charmap"
@@ -44,11 +44,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	validator, err := validation.NewValidator()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var oligs []string
 	if *mode == dna_beaver.ValidateMode || *mode == dna_beaver.SaveMode {
 		oligs, err = readOligsFromFile(*filePath)
@@ -57,7 +52,7 @@ func main() {
 		}
 		log.Println("validate initial set of oligs:")
 		printOligs(oligs)
-		err = validator.Validate(oligs)
+		err = validation.Validate(oligs)
 		if err != nil {
 			log.Print(err.Error())
 			if !*force {
@@ -70,23 +65,25 @@ func main() {
 			log.Print("validated successfully - synthesis does not contain errors")
 		}
 
-		seqMap := validator.Measure(oligs)
-		log.Printf("seqMap", seqMap)
+		statistics := measurements.Measure(oligs)
+		log.Printf("statistics for the synthesis:")
+		log.Printf("oligs number %d, wrong symbols %d, links number %d", statistics.Oligs, statistics.WrongSymbols, statistics.Links)
+		log.Printf("count by every link symbol %v", statistics.LinksCount)
 	}
 
 	if *mode == dna_beaver.SaveMode {
 		err = repo.InsertSynthesis(*synthesisName, *synthesisScale, oligs)
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("cannot save synthesis because of the error: " + err.Error())
 		}
-		log.Printf("synthesis %s saved with success.", *synthesisName)
+		log.Printf("synthesis '%s' saved with success", *synthesisName)
 	}
 	if *mode == dna_beaver.SearchMode {
 		foundSynthesis, err := repo.FindSynthesis(*searchPattern)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("found %d synthesis containing requested olig pattern %s.\n", len(foundSynthesis), *searchPattern)
+		log.Printf("found %d synthesis containing requested olig pattern %s\n", len(foundSynthesis), *searchPattern)
 		printSynthesis(foundSynthesis)
 	}
 }
@@ -109,12 +106,12 @@ func readOligsFromFile(filePath string) ([]string, error) {
 
 func printOligs(oo []string) {
 	for i, o := range oo {
-		fmt.Printf("Olig %d: %s\n", i+1, o)
+		log.Printf("olig %d: %s\n", i+1, o)
 	}
 }
 
 func printSynthesis(ss []dna_beaver.Synthesis) {
 	for _, s := range ss {
-		fmt.Printf("Synthes %+v\n", s)
+		log.Printf("synthes %+v\n", s)
 	}
 }

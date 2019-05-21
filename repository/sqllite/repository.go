@@ -4,6 +4,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/novikov1981/dna-beaver"
+	"github.com/satori/go.uuid"
 	"log"
 	"os"
 	"time"
@@ -45,8 +46,9 @@ func (r *Repository) create() error {
 	// SYNTHESIS
 	statement, err := r.database.Prepare(`
 	CREATE TABLE IF NOT EXISTS synthesis (
-		name TEXT PRIMARY KEY,
-		scale INTEGER,
+		uuid TEXT PRIMARY KEY,
+		name TEXT UNIQUE,
+		scale INTEGER CHECK(scale>0),
 		created_at TEXT
 	);`)
 	if err != nil {
@@ -61,9 +63,10 @@ func (r *Repository) create() error {
 	statement, err = r.database.Prepare(`
 		CREATE TABLE IF NOT EXISTS oligs (
 			uuid TEXT PRIMARY KEY,
-			synthesis_name TEXT,
+			synthesis_uuid TEXT,
 			content TEXT,
-			FOREIGN KEY(synthesis_name) REFERENCES synthesis(name)
+			position NUMBER CHECK(position>0),
+			FOREIGN KEY(synthesis_uuid) REFERENCES synthesis(uuid)
 				);`)
 	if err != nil {
 		return err
@@ -78,44 +81,22 @@ func (r *Repository) create() error {
 }
 
 func (r *Repository) InsertSynthesis(name string, scale int64, oo []string) error {
-	//createdAt := ....
-	// INSERT to synthesis
-	//for _, o := range oo {
-	//	oligUUID := generate()
-	//	// INSER to olig
-	//}
-	//
+	createdAt := time.Now().Format("2006-01-02 15:04:05")
+	synthesisUUID := uuid.NewV4().String()
 	tx, err := r.database.Beginx()
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(`INSERT INTO synthesis (name, scale, created_at) VALUES (?, ?, ?)`, name, scale, time.Now())
+	_, err = tx.Exec(`INSERT INTO synthesis (uuid, name, scale, created_at) VALUES (?, ?, ?, ?)`,
+		synthesisUUID, name, scale, createdAt)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
-	//for _,o := range oo {
-	//	_, err = tx.Exec(`INSERT INTO oligs (name, scale, created_at) VALUES (?, ?, ?)`,name,scale,time.Now())
-	//	if err != nil {
-	//		tx.Rollback()
-	//		return err
-	//	}
-	//}
-	err = tx.Commit()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *Repository) InsertOligs(uuid string, synthesis_name, oo []string) error {
-
-	tx, err := r.database.Beginx()
-	if err != nil {
-		return err
-	}
-	for _, o := range oo {
-		_, err = tx.Exec(`INSERT INTO oligs (uuid, synthesis_name, content) VALUES (?, ?, ?)`, uuid, synthesis_name, o)
+	for i, o := range oo {
+		oligUUID := uuid.NewV4().String()
+		_, err = tx.Exec(`INSERT INTO oligs (uuid, synthesis_uuid, content, position) VALUES (?, ?, ?, ?)`,
+			oligUUID, synthesisUUID, o, i+1)
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -129,5 +110,6 @@ func (r *Repository) InsertOligs(uuid string, synthesis_name, oo []string) error
 }
 
 func (r *Repository) FindSynthesis(pattern string) ([]dna_beaver.Synthesis, error) {
+	// TODO: implement this
 	return nil, nil
 }
