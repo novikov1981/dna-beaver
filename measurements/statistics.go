@@ -58,50 +58,50 @@ func Measure(oo []string) (synthesisStatistic Statistics) {
 func countAmedits(link string, stat *Statistics) {
 	switch link {
 	case "R":
-		stat.AmeditCount[DA] += 0.5
-		stat.AmeditCount[DG] += 0.5
+		stat.AmeditCount[DA] += 1 / 2
+		stat.AmeditCount[DG] += 1 / 2
 	case "Y":
-		stat.AmeditCount[DC] += 0.5
-		stat.AmeditCount[DT] += 0.5
+		stat.AmeditCount[DC] += 1 / 2
+		stat.AmeditCount[DT] += 1 / 2
 	case "K":
-		stat.AmeditCount[DG] += 0.5
-		stat.AmeditCount[DT] += 0.5
+		stat.AmeditCount[DG] += 1 / 2
+		stat.AmeditCount[DT] += 1 / 2
 	case "M":
-		stat.AmeditCount[DC] += 0.5
-		stat.AmeditCount[DA] += 0.5
+		stat.AmeditCount[DC] += 1 / 2
+		stat.AmeditCount[DA] += 1 / 2
 	case "S":
-		stat.AmeditCount[DC] += 0.5
-		stat.AmeditCount[DG] += 0.5
+		stat.AmeditCount[DC] += 1 / 2
+		stat.AmeditCount[DG] += 1 / 2
 
 	case "W":
-		stat.AmeditCount[DA] += 0.5
-		stat.AmeditCount[DT] += 0.5
+		stat.AmeditCount[DA] += 1 / 2
+		stat.AmeditCount[DT] += 1 / 2
 
 	case "B":
-		stat.AmeditCount[DC] += 0.33
-		stat.AmeditCount[DG] += 0.33
-		stat.AmeditCount[DT] += 0.33
+		stat.AmeditCount[DC] += 1 / 3
+		stat.AmeditCount[DG] += 1 / 3
+		stat.AmeditCount[DT] += 1 / 3
 
 	case "D":
-		stat.AmeditCount[DA] += 0.33
-		stat.AmeditCount[DG] += 0.33
-		stat.AmeditCount[DT] += 0.33
+		stat.AmeditCount[DA] += 1 / 3
+		stat.AmeditCount[DG] += 1 / 3
+		stat.AmeditCount[DT] += 1 / 3
 
 	case "H":
-		stat.AmeditCount[DA] += 0.33
-		stat.AmeditCount[DC] += 0.33
-		stat.AmeditCount[DG] += 0.33
+		stat.AmeditCount[DA] += 1 / 3
+		stat.AmeditCount[DC] += 1 / 3
+		stat.AmeditCount[DG] += 1 / 3
 
 	case "V":
-		stat.AmeditCount[DA] += 0.33
-		stat.AmeditCount[DG] += 0.33
-		stat.AmeditCount[DC] += 0.33
+		stat.AmeditCount[DA] += 1 / 3
+		stat.AmeditCount[DG] += 1 / 3
+		stat.AmeditCount[DC] += 1 / 3
 
 	case "N":
-		stat.AmeditCount[DA] += 0.25
-		stat.AmeditCount[DG] += 0.25
-		stat.AmeditCount[DC] += 0.25
-		stat.AmeditCount[DT] += 0.25
+		stat.AmeditCount[DA] += 1 / 4
+		stat.AmeditCount[DG] += 1 / 4
+		stat.AmeditCount[DC] += 1 / 4
+		stat.AmeditCount[DT] += 1 / 4
 
 	default:
 		stat.AmeditCount[link] += 1
