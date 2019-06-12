@@ -27,6 +27,7 @@ func main() {
 	log.Printf("start DNA BEAVER APPLICATION")
 	defer log.Printf("finish DNA BEAVER APPLICATION")
 	log.Printf("synthesis '%s', scale %d, synthesis file '%s' running in mode '%s'", *synthesisName, *synthesisScale, *filePath, *mode)
+
 	if *mode == dna_beaver.SearchMode {
 		log.Printf("search pattern '%s'", *searchPattern)
 	}
@@ -35,7 +36,7 @@ func main() {
 	if *synthesisScale <= 0 {
 		log.Fatalf("error: wrong scale provided %d, should be above zero", *synthesisScale)
 	}
-	if *filePath == "" {
+	if *filePath == "" && *mode != dna_beaver.SearchMode {
 		log.Fatalf("error: empty file path with synthesis provided %s", *filePath)
 	}
 
@@ -83,7 +84,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Printf("found %d synthesis containing requested olig pattern %s\n", len(foundSynthesis), *searchPattern)
+		log.Printf("found %d synthesis containing requested olig pattern '%s'\n", len(foundSynthesis), *searchPattern)
 		printSynthesis(foundSynthesis)
 	}
 }
@@ -112,6 +113,9 @@ func printOligs(oo []string) {
 
 func printSynthesis(ss []dna_beaver.Synthesis) {
 	for _, s := range ss {
-		log.Printf("synthes %+v\n", s)
+		log.Printf("synthesis uuid=%s, name '%s', saved %s, scale %d oligs", s.Uuid, s.Name, s.CreatedAt, s.Scale)
+		for _, o := range s.Oligs {
+			log.Printf("%d %s", o.Position, o.Content)
+		}
 	}
 }

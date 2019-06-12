@@ -110,6 +110,47 @@ func (r *Repository) InsertSynthesis(name string, scale int64, oo []string) erro
 }
 
 func (r *Repository) FindSynthesis(pattern string) ([]dna_beaver.Synthesis, error) {
-	// TODO: implement this
-	return nil, nil
+	var ss []dna_beaver.Synthesis
+	tx, err := r.database.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	err = tx.Select(&ss, `
+		SELECT * 
+		FROM synthesis 
+		WHERE EXISTS (
+				SELECT 
+					1 
+				FROM 
+					oligs
+				WHERE 
+					oligs.content LIKE "%" || ? || "%"
+					AND 
+					oligs.synthesis_uuid = synthesis.uuid
+			) OR 
+			synthesis.name LIKE "%" || ? || "%"`, pattern, pattern)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	for i, s := range ss {
+		var oo []dna_beaver.Olig
+		err = tx.Select(&oo, `
+			SELECT * 
+			FROM oligs 
+			WHERE oligs.synthesis_uuid = ?
+				AND 
+				  oligs.content LIKE "%" || ? || "%"
+			ORDER BY oligs.position`, s.Uuid, pattern)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		ss[i].Oligs = oo
+	}
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+	return ss, nil
 }
