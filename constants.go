@@ -5,6 +5,7 @@ const (
 	ValidateMode = "validate"
 	SaveMode     = "save"
 	SearchMode   = "search"
+	PrintMode    = "print"
 )
 
 const (

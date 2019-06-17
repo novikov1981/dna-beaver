@@ -28,16 +28,9 @@ func main() {
 	defer log.Printf("finish DNA BEAVER APPLICATION")
 	log.Printf("synthesis '%s', scale %d, synthesis file '%s' running in mode '%s'", *synthesisName, *synthesisScale, *filePath, *mode)
 
-	if *mode == dna_beaver.SearchMode {
-		log.Printf("search pattern '%s'", *searchPattern)
-	}
-
 	// flags validation
 	if *synthesisScale <= 0 {
 		log.Fatalf("error: wrong scale provided %d, should be above zero", *synthesisScale)
-	}
-	if *filePath == "" && *mode != dna_beaver.SearchMode {
-		log.Fatalf("error: empty file path with synthesis provided %s", *filePath)
 	}
 
 	repo, err := sqllite.NewRepository(dna_beaver.SqlLiteFile)
@@ -45,8 +38,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	var oligs []string
+	validated := true
 	if *mode == dna_beaver.ValidateMode || *mode == dna_beaver.SaveMode {
+		if *filePath == "" {
+			log.Fatalf("error: empty file path with synthesis provided")
+		}
+		var oligs []string
 		oligs, err = readOligsFromFile(*filePath)
 		if err != nil {
 			log.Fatalf("error: oligs file reading problem: %s", err.Error())
@@ -56,36 +53,50 @@ func main() {
 		err = validation.Validate(oligs)
 		if err != nil {
 			log.Print(err.Error())
-			if !*force {
-				log.Print("synthesis will not be saved because of validation errors")
-				return
-			} else {
-				log.Print("force saving non validated synthesis")
-			}
+			validated = false
 		} else {
 			log.Print("validated successfully - synthesis does not contain errors")
 		}
-
 		statistics := measurements.Measure(oligs)
 		log.Printf("statistics for the synthesis:")
 		log.Printf("oligs number %d, wrong symbols %d, links number %d", statistics.Oligs, statistics.WrongSymbols, statistics.Links)
 		log.Printf("count by every link symbol %v", statistics.LinksCount)
 	}
-
 	if *mode == dna_beaver.SaveMode {
+		if !validated {
+			if !*force {
+				log.Fatalf("synthesis will not be saved because of validation errors")
+			} else {
+				log.Print("force saving non validated synthesis")
+			}
+		}
+		var oligs []string
 		err = repo.InsertSynthesis(*synthesisName, *synthesisScale, oligs)
 		if err != nil {
 			log.Fatal("cannot save synthesis because of the error: " + err.Error())
 		}
 		log.Printf("synthesis '%s' saved with success", *synthesisName)
-	}
-	if *mode == dna_beaver.SearchMode {
+	} else if *mode == dna_beaver.SearchMode {
+		log.Printf("search pattern '%s'", *searchPattern)
 		foundSynthesis, err := repo.FindSynthesis(*searchPattern)
 		if err != nil {
 			log.Fatal(err)
 		}
 		log.Printf("found %d synthesis containing requested olig pattern '%s'\n", len(foundSynthesis), *searchPattern)
-		printSynthesis(foundSynthesis)
+		printSearchResults(foundSynthesis)
+	} else if *mode == dna_beaver.PrintMode {
+		if *synthesisName == "" {
+			log.Fatalf("error: empty sequence name to print provided")
+		}
+		synt, err := repo.GetSynthesis(*synthesisName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if synt == nil {
+			log.Fatalf("no sequence found for name '%s'", *synthesisName)
+		}
+		log.Printf("print sequence '%s'", *synthesisName)
+		printSynthesis(*synt)
 	}
 }
 
@@ -111,11 +122,18 @@ func printOligs(oo []string) {
 	}
 }
 
-func printSynthesis(ss []dna_beaver.Synthesis) {
+func printSearchResults(ss []dna_beaver.Synthesis) {
 	for _, s := range ss {
 		log.Printf("synthesis uuid=%s, name '%s', saved %s, scale %d oligs", s.Uuid, s.Name, s.CreatedAt, s.Scale)
 		for _, o := range s.Oligs {
 			log.Printf("%d %s", o.Position, o.Content)
 		}
+	}
+}
+
+func printSynthesis(s dna_beaver.Synthesis) {
+	log.Printf("synthesis uuid=%s, name '%s', saved %s, scale %d oligs", s.Uuid, s.Name, s.CreatedAt, s.Scale)
+	for _, o := range s.Oligs {
+		log.Printf("%s", o.Content)
 	}
 }

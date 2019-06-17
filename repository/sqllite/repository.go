@@ -1,6 +1,7 @@
 package sqllite
 
 import (
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/novikov1981/dna-beaver"
@@ -153,4 +154,43 @@ func (r *Repository) FindSynthesis(pattern string) ([]dna_beaver.Synthesis, erro
 		return nil, err
 	}
 	return ss, nil
+}
+
+func (r *Repository) GetSynthesis(name string) (*dna_beaver.Synthesis, error) {
+	var ss []dna_beaver.Synthesis
+	tx, err := r.database.Beginx()
+	if err != nil {
+		return nil, err
+	}
+	err = tx.Select(&ss, `
+		SELECT * 
+		FROM synthesis 
+		WHERE synthesis.name = ?`, name)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	if len(ss) == 0 {
+		return nil, nil
+	}
+	if len(ss) > 1 {
+		return nil, fmt.Errorf("number of results by search on synthesis name is more than 1, synthesis found: %+v", ss)
+	}
+	synt := ss[0]
+	var oo []dna_beaver.Olig
+	err = tx.Select(&oo, `
+		SELECT * 
+		FROM oligs 
+		WHERE oligs.synthesis_uuid = ?
+    	ORDER BY oligs.position`, synt.Uuid)
+	if err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+	synt.Oligs = oo
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
