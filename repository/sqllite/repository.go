@@ -34,7 +34,7 @@ func NewRepository(dbPath string) (*Repository, error) {
 }
 
 func checkFileExists(filePath string) bool {
-	if _, err := os.Stat("./synthesis.db"); err != nil {
+	if _, err := os.Stat(filePath); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
@@ -192,5 +192,5 @@ func (r *Repository) GetSynthesis(name string) (*dna_beaver.Synthesis, error) {
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	return &synt, nil
 }
