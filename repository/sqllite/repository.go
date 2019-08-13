@@ -6,7 +6,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/novikov1981/dna-beaver"
 	"github.com/satori/go.uuid"
-	"log"
 	"os"
 	"time"
 )
@@ -38,7 +37,8 @@ func checkFileExists(filePath string) bool {
 		if os.IsNotExist(err) {
 			return false
 		}
-		log.Fatalf("error: file stat problems: %s", err.Error())
+		fmt.Printf("error: file stat problems: %s\n", err.Error())
+		os.Exit(1)
 	}
 	return true
 }

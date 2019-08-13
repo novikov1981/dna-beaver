@@ -10,7 +10,6 @@ import (
 	validation "github.com/novikov1981/dna-beaver/validations"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
-	"log"
 	"os"
 )
 
@@ -29,12 +28,12 @@ func main() {
 	printMode := flag.NewFlagSet("print", flag.ExitOnError)
 	var printSynthesisName = printMode.String("name", "", "the name of the sysnthesis under interest")
 
-	log.Printf("start DNA BEAVER APPLICATION")
-	defer log.Printf("finish DNA BEAVER APPLICATION")
+	fmt.Printf("start DNA BEAVER APPLICATION\n\n")
+	defer fmt.Printf("finish DNA BEAVER APPLICATION")
 
 	if len(os.Args) < 2 {
-		fmt.Println("validate/save/search/print subcommand is required")
-		os.Exit(1)
+		fmt.Println("validate/save/search/print command is required")
+		return
 	}
 
 	switch os.Args[1] {
@@ -48,73 +47,93 @@ func main() {
 		printMode.Parse(os.Args[2:])
 	default:
 		flag.PrintDefaults()
-		os.Exit(1)
+		return
 	}
 
 	repo, err := sqllite.NewRepository(dna_beaver.SqlLiteFile)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err.Error())
+		return
 	}
 
 	/////// VALIDATE
 	if validateMode.Parsed() {
-		log.Printf("validate synthesis file %s", *validateFilePath)
+		fmt.Printf("validate synthesis file %s\n", *validateFilePath)
 		if *validateFilePath == "" {
-			log.Fatalf("error: empty file path with synthesis provided")
+			fmt.Println("error: empty file path with synthesis provided\n")
+			return
 		}
 		var oligs []string
 		oligs, err = readOligsFromFile(*validateFilePath)
 		if err != nil {
-			log.Fatalf("error: oligs file reading problem: %s", err.Error())
+			fmt.Printf("error: oligs file reading problem - %s\n\n", err.Error())
+			return
 		}
-		log.Println("validate initial set of oligs:")
+		fmt.Println("validate initial set of oligs:")
 		printOligs(oligs)
+		fmt.Println()
 		err = validation.Validate(oligs)
 		if err != nil {
-			log.Print(err.Error())
+			fmt.Print(err.Error())
 		} else {
-			log.Print("validated successfully - synthesis does not contain errors")
+			fmt.Println("validated successfully - synthesis does not contain errors\n")
 		}
 		statistics := measurements.Measure(oligs)
-		log.Printf(`statistics for the synthesis:
-                    oligs count   %d
-                    wrong symbols %d
-                    links number  %d`, statistics.Oligs, statistics.WrongSymbols, statistics.Links)
-		log.Printf(`count by every link symbol:
-                    %v`, statistics.LinksCount)
+		fmt.Printf("statistics for the synthesis: \noligs count   %d\nwrong symbols %d\nlinks number  %d\n\n",
+			statistics.Oligs, statistics.WrongSymbols, statistics.Links)
+		fmt.Printf("count by every link symbol:\n")
+		for _, r := range dna_beaver.ValidNotations {
+			fmt.Printf("%s:%d; ", string(r), statistics.LinksCount[string(r)])
+		}
+		fmt.Println()
+		fmt.Printf("\ncount by amedit:\n")
+		for _, amedit := range dna_beaver.Amedits {
+			fmt.Printf("%s:%.2f; ", amedit, statistics.AmeditCount[amedit])
+		}
+		fmt.Println("\n")
 	}
 	/////// SAVE
 	if saveMode.Parsed() {
-		log.Printf("save synthesis '%s' from file %s, scale %d", *saveSynthesisName, *saveFilePath, *saveSynthesisScale)
+		fmt.Printf("save synthesis '%s' from file %s, scale %d\n", *saveSynthesisName, *saveFilePath, *saveSynthesisScale)
 		var oligs []string
+		oligs, err = readOligsFromFile(*saveFilePath)
+		if err != nil {
+			fmt.Printf("error: oligs file reading problem - %s\n\n", err.Error())
+			return
+		}
 		err = repo.InsertSynthesis(*saveSynthesisName, *saveSynthesisScale, oligs)
 		if err != nil {
-			log.Fatal("cannot save synthesis because of the error: " + err.Error())
+			fmt.Printf("cannot save synthesis because of the error: %s\n\n", err.Error())
+			return
 		}
-		log.Printf("synthesis '%s' saved with success", *saveSynthesisName)
+		fmt.Printf("synthesis '%s' saved with success\n\n", *saveSynthesisName)
 	}
 	/////// SEACH
 	if searchMode.Parsed() {
-		log.Printf("search by pattern '%s' in synthesis name or oligs sequences", *searchPattern)
+		fmt.Printf("search by pattern '%s' in synthesis name or oligs sequences\n", *searchPattern)
 		foundSynthesis, err := repo.FindSynthesis(*searchPattern)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err.Error())
+			return
 		}
-		log.Printf("found %d synthesis containing requested olig pattern '%s'\n", len(foundSynthesis), *searchPattern)
+		fmt.Printf("found %d synthesis containing requested olig pattern '%s'\n", len(foundSynthesis), *searchPattern)
 		printSearchResults(foundSynthesis)
+		fmt.Println()
 	}
 	/////// PRINT
 	if printMode.Parsed() {
-		log.Printf("print synthesis '%s'", *printSynthesisName)
+		fmt.Printf("print synthesis '%s'\n", *printSynthesisName)
 		if *printSynthesisName == "" {
-			log.Fatalf("error: empty sequence name to print provided")
+			fmt.Println("error: empty sequence name to print provided")
 		}
 		synt, err := repo.GetSynthesis(*printSynthesisName)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err.Error())
+			return
 		}
 		if synt == nil {
-			log.Fatalf("no sequence found for name '%s'", *printSynthesisName)
+			fmt.Printf("no sequence found for name '%s'\n", *printSynthesisName)
+			return
 		}
 		printSynthesis(*synt)
 	}
@@ -138,22 +157,23 @@ func readOligsFromFile(filePath string) ([]string, error) {
 
 func printOligs(oo []string) {
 	for i, o := range oo {
-		log.Printf("olig %d: %s\n", i+1, o)
+		fmt.Printf("olig %d: %s\n", i+1, o)
 	}
 }
 
 func printSearchResults(ss []dna_beaver.Synthesis) {
 	for _, s := range ss {
-		log.Printf("synthesis uuid=%s, name '%s', saved %s, scale %d", s.Uuid, s.Name, s.CreatedAt, s.Scale)
+		fmt.Printf("synthesis uuid=%s, name '%s', saved %s, scale %d\n", s.Uuid, s.Name, s.CreatedAt, s.Scale)
 		for _, o := range s.Oligs {
-			log.Printf("%d %s", o.Position, o.Content)
+			fmt.Printf("%d %s\n", o.Position, o.Content)
 		}
 	}
 }
 
 func printSynthesis(s dna_beaver.Synthesis) {
-	log.Printf("synthesis uuid=%s, name '%s', saved %s, scale %d", s.Uuid, s.Name, s.CreatedAt, s.Scale)
+	fmt.Printf("synthesis uuid=%s, name '%s', saved %s, scale %d\n", s.Uuid, s.Name, s.CreatedAt, s.Scale)
 	for _, o := range s.Oligs {
-		log.Printf("%s", o.Content)
+		fmt.Printf("%s\n", o.Content)
 	}
+	fmt.Println()
 }
