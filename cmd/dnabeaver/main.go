@@ -1,4 +1,4 @@
-package dnabeaver
+package main
 
 import (
 	"bufio"
